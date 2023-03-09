@@ -1,15 +1,23 @@
-"use strict";
-
 const fs = require("fs");
 const path = require("path");
 const Sequelize = require("sequelize");
 const process = require("process");
+
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || "development";
-const config = require(__dirname + "/../config/config.js")[env];
+const config = require(`${__dirname}/../config/config.js`)[env];
+
 const db = {};
-console.log(config);
-const sequelize = new Sequelize(`${config.url}?sslmode=no-verify`, config);
+
+let sequelize;
+if (config.url) {
+  sequelize = new Sequelize(config.url, config);
+} else {
+  sequelize = new Sequelize(config.database, config.username, config.password, {
+    host: config.host,
+    dialect: config.dialect
+  });
+}
 
 fs.readdirSync(__dirname)
   .filter((file) => {
@@ -21,6 +29,7 @@ fs.readdirSync(__dirname)
     );
   })
   .forEach((file) => {
+    // eslint-disable-next-line global-require
     const model = require(path.join(__dirname, file))(
       sequelize,
       Sequelize.DataTypes
